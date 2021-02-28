@@ -5,3 +5,8 @@ ChangeLog
 	Added UI
 	Added many skins
 	Cleanup
+	New dependencies
+		ClickThroughBlocker
+		ToolbarController
+		SpaceTuxLibrary
+		
