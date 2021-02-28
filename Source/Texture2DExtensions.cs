@@ -43,9 +43,13 @@ namespace NavBallTextureChanger.Extensions
 				if (!Directory.Exists(directory))
 					Directory.CreateDirectory(directory);
 
-				var file = new FileStream(fullPath, FileMode.OpenOrCreate, FileAccess.Write);
-				var writer = new BinaryWriter(file);
-				writer.Write(texture.EncodeToPNG());
+				var bytes = texture.EncodeToPNG();
+				File.WriteAllBytes(fullPath, bytes);
+
+
+				//var file = new FileStream(fullPath, FileMode.OpenOrCreate, FileAccess.Write);
+				//var writer = new BinaryWriter(file);
+				//writer.Write(texture.EncodeToPNG());
 
 				return true;
 			}

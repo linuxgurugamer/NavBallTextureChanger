@@ -6,6 +6,8 @@ using KSP.IO;
 using NavBallTextureChanger.Extensions;
 using UnityEngine;
 using File = System.IO.File;
+using static NavBallTextureChanger.Statics;
+
 
 namespace NavBallTextureChanger
 {
@@ -14,19 +16,25 @@ namespace NavBallTextureChanger
 	{
 		private const string ConfigFileName = "settings.cfg";
 
-		[Persistent]
-		private NavBallTexture _navballTexture = new NavBallTexture(GetSkinDirectory());
+		internal static  NavBallTexture _navballTexture; //= new NavBallTexture(GetSkinDirectory());
 
 		private void Awake()
 		{
-			LoadConfig();
+			_navballTexture = new NavBallTexture(GetSkinDirectory());
 
+			//LoadConfig();
+
+			// Save the original textures first
+			_navballTexture.SaveCopyOfStockTexture(true);
+			//_navballTexture.SaveCopyOfIvaTexture();
+			// Then load the config
+			_navballTexture.LoadConfig();
 
 			GameEvents.onVesselChange.Add(OnVesselChanged);
 			GameEvents.OnCameraChange.Add(OnCameraChanged);
+			GameEvents.onGameSceneSwitchRequested.Add(OnGameSceneSwitchRequested);
 
-			_navballTexture.SaveCopyOfStockTexture();
-			UpdateFlightTexture();
+			//UpdateFlightTexture();
 		}
 
 
@@ -34,9 +42,10 @@ namespace NavBallTextureChanger
 		{
 			GameEvents.onVesselChange.Remove(OnVesselChanged);
 			GameEvents.OnCameraChange.Remove(OnCameraChanged);
+			GameEvents.onGameSceneSwitchRequested.Remove(OnGameSceneSwitchRequested);
 		}
 
-
+#if false
 		private void LoadConfig()
 		{
 			var configPath = IOUtils.GetFilePathFor(typeof(NavBallChanger), ConfigFileName);
@@ -44,32 +53,41 @@ namespace NavBallTextureChanger
 
 			if (!haveConfig)
 			{
-				Debug.Log("[NavBallChanger] - Config file not found. Creating default");
+				Log.Info("Config file not found. Creating default");
 
 				if (!Directory.Exists(Path.GetDirectoryName(configPath)))
 					Directory.CreateDirectory(Path.GetDirectoryName(configPath));
 
 				ConfigNode.CreateConfigFromObject(this).Save(configPath);
+				Log.Info("Default config file saved: " + configPath);
 			}
 
 			configPath
 				.With(ConfigNode.Load)
 				.Do(config => ConfigNode.LoadObjectFromConfig(this, config));
 		}
-
+#endif
 
 		private void OnVesselChanged(Vessel data)
 		{
 			_navballTexture.Do(nbt => nbt.MarkMaterialsChanged());
 			UpdateFlightTexture();
 		}
+		private void OnGameSceneSwitchRequested(GameEvents.FromToAction<GameScenes, GameScenes> fta)
+        {
+			IVAactive = false;
+        }
 
-
+		public static bool IVAactive = false;
 		// Reset textures when entering IVA. Parts might have loaded or changed their internal spaces
 		// in the meantime
 		private void OnCameraChanged(CameraManager.CameraMode mode)
 		{
-			if (mode != CameraManager.CameraMode.IVA) return;
+			IVAactive = (mode == CameraManager.CameraMode.IVA);
+			if (!IVAactive)
+			{			
+				return;
+			}
 
 			UpdateIvaTextures();
 		}
@@ -84,14 +102,14 @@ namespace NavBallTextureChanger
 
 		private void UpdateIvaTextures()
 		{
-			_navballTexture.SaveCopyOfIvaEmissiveTexture();
+			_navballTexture.SaveCopyOfIvaTexture();
 			_navballTexture.Do(nbt => nbt.SetIvaTextures());
 		}
 
 
-		private static UrlDir GetSkinDirectory()
+		internal static UrlDir GetSkinDirectory()
 		{
-			var skinUrl = AssemblyLoader.loadedAssemblies.GetByAssembly(Assembly.GetExecutingAssembly()).url + "/Skins";
+			var skinUrl =  "NavBallTextureChanger/Skins";
 
 			var directory =
 				GameDatabase.Instance.root.AllDirectories.FirstOrDefault(d => d.url == skinUrl);
