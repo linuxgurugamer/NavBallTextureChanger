@@ -10,3 +10,6 @@ ChangeLog
 		ToolbarController
 		SpaceTuxLibrary
 		
+2.0.0.1
+	Added advanced section
+	Added README

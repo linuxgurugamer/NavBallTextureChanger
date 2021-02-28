@@ -1,24 +1,20 @@
 {
-  "NAME":"NavBallTextureChanger",
-  "URL":"https://raw.githubusercontent.com/theRagingIrishman/NavBallTextureChanger/master/GameData/NavBallTextureChanger/NavBallTextureChanger.version",
-  "DOWNLOAD":"https://github.com/theRagingIrishman/NavBallTextureChanger/releases/latest",
-  "GITHUB":
-  {
-    "USERNAME":"theRagingIrishman",
-    "REPOSITORY":"NavBallTextureChanger",
-    "ALLOW_PRE_RELEASE":false
+  "NAME": "NavBallTextureChanger",
+  "URL": "http://ksp.spacetux.net/avc/NavBallTextureChanger",
+  "GITHUB": {
+    "USERNAME": "linuxgurugamer",
+    "REPOSITORY": "NavBallTextureChanger",
+    "ALLOW_PRE_RELEASE": false
   },
-  "VERSION":
-  {
-    "MAJOR":1,
-    "MINOR":6,
-    "PATCH":0,
-    "BUILD":0
+  "VERSION": {
+    "MAJOR": 2,
+    "MINOR": 0,
+    "PATCH": 0,
+    "BUILD": 0
   },
-  "KSP_VERSION":
-  {
-    "MAJOR":1,
-    "MINOR":3,
-    "PATCH":0
+  "KSP_MIN_VERSION": {
+    "MAJOR": 1,
+    "MINOR": 8,
+    "PATCH": 0
   }
 }

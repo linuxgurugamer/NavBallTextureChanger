@@ -77,6 +77,8 @@ namespace NavBallTextureChanger
         bool tested = false;
 
         bool onlyShowWithEmissives = false;
+        bool advanced = false;
+        bool emissiveApplied = false;
 
         void Start()
         {
@@ -180,7 +182,7 @@ namespace NavBallTextureChanger
 
         bool lastRectInitted = false;
         Rect lastRect;
-
+        Color emc;
         void DrawWindow(int id)
         {
             GUILayout.BeginVertical();
@@ -202,16 +204,9 @@ namespace NavBallTextureChanger
                         saved = false;
                         selected = true;
                         tested = false;
+                        emc = new Color(fe.EmissiveColor.r, fe.EmissiveColor.g, fe.EmissiveColor.b, fe.EmissiveColor.a);
                     }
 
-#if false
-                if (GUILayout.Button(t.Value.thumb, GUI.skin.label))
-                {
-                    fe = t.Value;
-                    saved = false;
-                    selected = true;
-                }
-#endif
                     GUILayout.BeginVertical();
                     GUILayout.FlexibleSpace();
                     if (t.Value.Flight)
@@ -295,6 +290,65 @@ namespace NavBallTextureChanger
             }
             GUILayout.FlexibleSpace();
             GUILayout.EndHorizontal();
+            GUILayout.BeginHorizontal();
+                GUI.enabled = (tested || saved);
+            advanced = GUILayout.Toggle(advanced, "Advanced (only visible in IVA)", GUILayout.Width(90));
+            GUILayout.EndHorizontal();
+            if (advanced && NavBallChanger.IVAactive)
+            {
+                var tmp = emc;
+                GUILayout.BeginHorizontal();
+                GUILayout.Label("Changes won't take effect until applied\nChanges won't be saved until ");
+                GUILayout.EndHorizontal();
+                GUILayout.BeginHorizontal();
+                GUILayout.Label("Red:", GUILayout.Width(60));
+                emc.r = GUILayout.HorizontalSlider(emc.r, 0, 1, GUILayout.Width(600));
+                GUILayout.EndHorizontal();
+
+                GUILayout.BeginHorizontal();
+                GUILayout.Label("Green:", GUILayout.Width(60));
+                emc.g = GUILayout.HorizontalSlider(emc.g, 0, 1, GUILayout.Width(600));
+                GUILayout.EndHorizontal();
+
+                GUILayout.BeginHorizontal();
+                GUILayout.Label("Blue:", GUILayout.Width(60));
+                emc.b = GUILayout.HorizontalSlider(emc.b, 0, 1, GUILayout.Width(600));
+                GUILayout.EndHorizontal();
+
+                GUILayout.BeginHorizontal();
+                GUILayout.Label("Alpha:", GUILayout.Width(60));
+                emc.a = GUILayout.HorizontalSlider(emc.a, 0, 1, GUILayout.Width(600));
+                GUILayout.EndHorizontal();
+
+
+                GUILayout.BeginHorizontal();
+                GUILayout.FlexibleSpace();
+                GUI.enabled = (emc != fe.EmissiveColor);
+                if (tmp != emc)
+                    emissiveApplied = false;
+                if (GUILayout.Button("Apply Emissive Changes", GUILayout.Width(180)))
+                {
+                    NavBallChanger._navballTexture.SetEmissiveColor(emc);
+                    emissiveApplied = true;
+                }
+                GUILayout.FlexibleSpace();
+                GUI.enabled = emissiveApplied;
+                if (GUILayout.Button("Save Emissive Changes", GUILayout.Width(180)))
+                {
+                    fe.EmissiveColor = emc;
+                }
+                GUILayout.FlexibleSpace();
+                GUI.enabled = true;
+                if (GUILayout.Button("Reset", GUILayout.Width(180)))
+                {
+                    emc = fe.EmissiveColor;
+                    NavBallChanger._navballTexture.SetEmissiveColor(emc);
+                }
+                GUI.enabled = true;
+                GUILayout.FlexibleSpace();
+                GUILayout.EndHorizontal();
+            }
+            GUI.enabled = true;
             GUILayout.EndVertical();
             GUI.DragWindow();
         }

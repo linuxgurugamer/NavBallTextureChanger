@@ -22,11 +22,9 @@ namespace NavBallTextureChanger
 		{
 			_navballTexture = new NavBallTexture(GetSkinDirectory());
 
-			//LoadConfig();
-
 			// Save the original textures first
 			_navballTexture.SaveCopyOfStockTexture(true);
-			//_navballTexture.SaveCopyOfIvaTexture();
+
 			// Then load the config
 			_navballTexture.LoadConfig();
 
@@ -34,7 +32,7 @@ namespace NavBallTextureChanger
 			GameEvents.OnCameraChange.Add(OnCameraChanged);
 			GameEvents.onGameSceneSwitchRequested.Add(OnGameSceneSwitchRequested);
 
-			//UpdateFlightTexture();
+			//UpdateFlightTexture(); // Now done in LoadConfig()
 		}
 
 
@@ -45,28 +43,6 @@ namespace NavBallTextureChanger
 			GameEvents.onGameSceneSwitchRequested.Remove(OnGameSceneSwitchRequested);
 		}
 
-#if false
-		private void LoadConfig()
-		{
-			var configPath = IOUtils.GetFilePathFor(typeof(NavBallChanger), ConfigFileName);
-			var haveConfig = File.Exists(configPath);
-
-			if (!haveConfig)
-			{
-				Log.Info("Config file not found. Creating default");
-
-				if (!Directory.Exists(Path.GetDirectoryName(configPath)))
-					Directory.CreateDirectory(Path.GetDirectoryName(configPath));
-
-				ConfigNode.CreateConfigFromObject(this).Save(configPath);
-				Log.Info("Default config file saved: " + configPath);
-			}
-
-			configPath
-				.With(ConfigNode.Load)
-				.Do(config => ConfigNode.LoadObjectFromConfig(this, config));
-		}
-#endif
 
 		private void OnVesselChanged(Vessel data)
 		{
@@ -110,13 +86,6 @@ namespace NavBallTextureChanger
 		internal static string GetSkinDirectory()
 		{
 			var skinUrl =  "NavBallTextureChanger/PluginData/Skins";
-#if false
-			var directory =
-				GameDatabase.Instance.root.AllDirectories.FirstOrDefault(d => d.url == skinUrl);
-
-			if (directory == null)
-				throw new InvalidOperationException("Failed to find skin directory inside GameDatabase");
-#endif
 			return skinUrl;
 		}
 	}

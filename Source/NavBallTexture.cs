@@ -392,7 +392,12 @@ namespace NavBallTextureChanger
 
                 SaveConfig();
             }
+        }
 
+        public void SetEmissiveColor(Color ec)
+        {
+            EmissiveColor = ec;
+            SetIvaTextures(false);
         }
 
         public void ResetTexture()
