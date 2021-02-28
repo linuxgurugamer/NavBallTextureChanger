@@ -34,7 +34,7 @@ namespace NavBallTextureChanger
         // IVA materials are not cached because mods might spawn new IVAs or change/destroy existing ones
         // we'll grab those materials only when we're about to use them
 
-        private readonly UrlDir _skinDirectory;
+        private readonly string _skinDirectory;
 
         private Texture2D _mainTextureRef;
         private Texture2D _emissiveTextureRef;
@@ -126,7 +126,7 @@ namespace NavBallTextureChanger
         }
 
 
-        public NavBallTexture([NotNull] UrlDir skinDirectory)
+        public NavBallTexture(string skinDirectory)
         {
             if (skinDirectory == null) throw new ArgumentNullException("skinDirectory");
 
@@ -185,7 +185,7 @@ namespace NavBallTextureChanger
 
             try
             {
-                KSPUtil.GetOrCreatePath("GameData/" + _skinDirectory.url);
+                KSPUtil.GetOrCreatePath("GameData/" + _skinDirectory);
 
                 target
                     .With(tar => ((Texture2D)tar).CreateReadable())
@@ -196,7 +196,7 @@ namespace NavBallTextureChanger
             }
             catch (UnauthorizedAccessException e)
             {
-                Log.Error("Could not create copy of stock NavBall texture inside directory '" + _skinDirectory.url +
+                Log.Error("Could not create copy of stock NavBall texture inside directory '" + _skinDirectory +
                           "' due to insufficient permissions.");
                 Debug.LogException(e);
             }
@@ -209,9 +209,9 @@ namespace NavBallTextureChanger
             return successful;
         }
 
-        string StockUrl { get { return _skinDirectory.url + "/" + Path.GetFileNameWithoutExtension(StockTextureFileName); } }
-        string IvaUrl { get { return _skinDirectory.url + "/" + Path.GetFileNameWithoutExtension(IvaTextureFileName); } }
-        string IvaEmissiveUrl { get { return _skinDirectory.url + "/" + Path.GetFileNameWithoutExtension(IvaEmissiveTextureFileName); } }
+        string StockUrl { get { return _skinDirectory + "/" + Path.GetFileNameWithoutExtension(StockTextureFileName); } }
+        string IvaUrl { get { return _skinDirectory + "/" + Path.GetFileNameWithoutExtension(IvaTextureFileName); } }
+        string IvaEmissiveUrl { get { return _skinDirectory + "/" + Path.GetFileNameWithoutExtension(IvaEmissiveTextureFileName); } }
 
         // Always save a copy of the stock texture, in case it ever gets changed
         // This is called when the mod inititalizes the first time.  IVA has to wait
@@ -405,7 +405,7 @@ namespace NavBallTextureChanger
                 EmissiveUrl = SavedTexture.EmissiveUrl;
                 EmissiveColor = SavedTexture.EmissiveColor;
 
-                var stockUrl = _skinDirectory.url + "/" + Path.GetFileNameWithoutExtension("SavedTexture-" + StockTextureFileName);
+                var stockUrl = _skinDirectory + "/" + Path.GetFileNameWithoutExtension("SavedTexture-" + StockTextureFileName);
                 SaveCopyOfTexture(stockUrl, SavedTexture.MainTextureRef);
                 // Maybe use SetTexture below???
                 if (HighLogic.LoadedScene == GameScenes.FLIGHT)
@@ -422,8 +422,8 @@ namespace NavBallTextureChanger
 
         public void ResetToStockTexture()
         {
-            TextureUrl = _skinDirectory.url + "/" + StockTextureFileName;
-            EmissiveUrl = _skinDirectory.url + "/" + IvaTextureFileName;
+            TextureUrl = _skinDirectory + "/" + StockTextureFileName;
+            EmissiveUrl = _skinDirectory + "/" + IvaTextureFileName;
             EmissiveColor = DefaultEmissiveColor;
             Flight = true;
             Iva = true;

@@ -107,17 +107,17 @@ namespace NavBallTextureChanger
 		}
 
 
-		internal static UrlDir GetSkinDirectory()
+		internal static string GetSkinDirectory()
 		{
-			var skinUrl =  "NavBallTextureChanger/Skins";
-
+			var skinUrl =  "NavBallTextureChanger/PluginData/Skins";
+#if false
 			var directory =
 				GameDatabase.Instance.root.AllDirectories.FirstOrDefault(d => d.url == skinUrl);
 
 			if (directory == null)
 				throw new InvalidOperationException("Failed to find skin directory inside GameDatabase");
-
-			return directory;
+#endif
+			return skinUrl;
 		}
 	}
 }

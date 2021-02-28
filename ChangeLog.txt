@@ -1,0 +1,7 @@
+ChangeLog
+
+2.0.0
+	Removed use of persistence
+	Added UI
+	Added many skins
+	Cleanup
