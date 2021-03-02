@@ -25,6 +25,7 @@ namespace NavBallTextureChanger
         private const string IvaNavBallRendererName = "NavSphere";
 
         private static bool _savedStockTexture = false;
+        private static bool _savedIvaTexture = false;
         private static bool _savedEmissiveTexture = false;
 
 
@@ -37,6 +38,7 @@ namespace NavBallTextureChanger
         private readonly string _skinDirectory;
 
         private Texture2D _mainTextureRef;
+        private Texture2D _ivaTextureRef;
         private Texture2D _emissiveTextureRef;
 
         Color DefaultEmissiveColor = new Color(0.376f, 0.376f, 0.376f, 1f);
@@ -45,32 +47,44 @@ namespace NavBallTextureChanger
 
 
         private string TextureUrl = string.Empty;
+        private string IVATextureUrl = string.Empty;
         private string EmissiveUrl = string.Empty;
         private Color EmissiveColor = new Color(0.376f, 0.376f, 0.376f, 1f);
-        private bool Flight = true;
-        private bool Iva = true;
+        //private bool Flight = true;
+        //private bool Iva = true;
 
 
         internal class TextureInfo
         {
             internal Texture2D MainTextureRef = null;
+            internal Texture2D IVATextureRef = null;
             internal Texture2D EmissiveTextureRef = null;
             internal string TextureUrl = string.Empty;
+            internal string IVATextureUrl = string.Empty;
             internal string EmissiveUrl = string.Empty;
             internal Color EmissiveColor = new Color(0.376f, 0.376f, 0.376f, 1f);
 
-            internal TextureInfo(Texture2D textureRef, Texture2D emissiveTextureRef, string textureUrl, string emissiveUrl, Color emissiveColor)
+            internal TextureInfo(Texture2D ivaTextureRef, Texture2D emissiveTextureRef, string ivaUrl, string emissiveUrl, Color emissiveColor)
             {
-                MainTextureRef = textureRef;
+                IVATextureRef = ivaTextureRef;
                 EmissiveTextureRef = emissiveTextureRef;
-                TextureUrl = textureUrl;
+                IVATextureUrl = ivaUrl;
                 EmissiveUrl = emissiveUrl;
                 EmissiveColor = emissiveColor;
             }
+
+
+            internal TextureInfo(Texture2D textureRef,  string textureUrl)
+            {
+                MainTextureRef = textureRef;
+                TextureUrl = textureUrl;
+            }
+
         }
 
         static TextureInfo TestTexture;
         static TextureInfo SavedTexture;
+        static TextureInfo SavedIVATexture;
 
         const string PLUGINDATA = "GameData/NavBallTextureChanger/PluginData/";
         const string NODE = "NavballTexture";
@@ -83,10 +97,12 @@ namespace NavBallTextureChanger
             ConfigNode node = new ConfigNode(NODE);
 
             node.AddValue("TextureUrl", TextureUrl);
+            node.AddValue("IVATextureUrl", IVATextureUrl);
+
             node.AddValue("EmissiveUrl", EmissiveUrl);
             node.AddValue("EmissiveColor", EmissiveColor);
-            node.AddValue("Flight", Flight);
-            node.AddValue("Iva", Iva);
+            //node.AddValue("Flight", Flight);
+            //node.AddValue("Iva", Iva);
 
             fileNode.AddNode(node);
             fileNode.Save(PLUGINDATA + "config.cfg");
@@ -97,6 +113,8 @@ namespace NavBallTextureChanger
             if (!File.Exists(PLUGINDATA + "config.cfg"))
                 return;
             ConfigNode fileNode = ConfigNode.Load(PLUGINDATA + "config.cfg");
+            if (fileNode == null)
+                return;
             ConfigNode node = null;
             if (fileNode.TryGetNode(NODE, ref node))
             {
@@ -106,6 +124,12 @@ namespace NavBallTextureChanger
                     _mainTextureRef = new Texture2D(2, 2);
                     ToolbarControl.LoadImageFromFile(ref _mainTextureRef, "GameData/" + TextureUrl);
                 }
+                IVATextureUrl = node.SafeLoad("IVATextureUrl", string.Empty);
+                if (IVATextureUrl != "")
+                {
+                    _ivaTextureRef = new Texture2D(2, 2);
+                    ToolbarControl.LoadImageFromFile(ref _ivaTextureRef, "GameData/" + IVATextureUrl);
+                }
                 EmissiveUrl = node.SafeLoad("EmissiveUrl", string.Empty);
                 if (EmissiveUrl != "")
                 {
@@ -113,14 +137,19 @@ namespace NavBallTextureChanger
                     ToolbarControl.LoadImageFromFile(ref _emissiveTextureRef, "GameData/" + EmissiveUrl);
                 }
                 EmissiveColor = node.SafeLoad("EmissiveColor", new Color(0.376f, 0.376f, 0.376f, 1f));
-                Flight = node.SafeLoad("Flight", true);
-                Iva = node.SafeLoad("Iva", true);
-                _flightMaterial.Value.SetTexture("_MainTexture", _mainTextureRef);
+                //Flight = node.SafeLoad("Flight", true);
+                //Iva = node.SafeLoad("Iva", true);
 
                 if (!NavBallChanger.IVAactive)
+                {
+                    _flightMaterial.Value.SetTexture("_MainTexture", _mainTextureRef);
                     SetFlightTexture();
+                }
                 else
+                {
+                    _flightMaterial.Value.SetTexture("_MainTexture", _ivaTextureRef);
                     SetIvaTextures();
+                }
 
             }
         }
@@ -234,16 +263,23 @@ namespace NavBallTextureChanger
         // Always save a copy of the stock iva
         public void SaveCopyOfIvaTexture()
         {
+            Log.Info("SaveCopyOfIvaTexture, ivaSaved: " + ivaSaved);
             if (ivaSaved)
                 return;
             ivaSaved = true;
 
             GetStockTexture()
                 .IfNull(() => Log.Info("Could not create copy of iva texture"))
-                .Do(flightTexture => _savedStockTexture = SaveCopyOfTexture(IvaUrl, flightTexture))
-                .If(t => _savedStockTexture)
+                .Do(flightTexture => _savedIvaTexture = SaveCopyOfTexture(IvaUrl, flightTexture))
+                .If(t => _savedIvaTexture)
                 .Do(t => Log.Info("Saved a copy of stock NavBall texture to " + IvaUrl));
 
+            var l = GetIvaNavBallMaterials();
+            Log.Info("IVA List of materials: " + l.Count);
+            foreach (var m in l[0].GetTexturePropertyNames())
+            {
+                Log.Info("Texture m: " + m);
+            }
             GetIvaNavBallMaterials()
                 .FirstOrDefault(m => m.GetTexture("_Emissive") != null)
                 .With(m => m.GetTexture("_Emissive"))
@@ -291,7 +327,7 @@ namespace NavBallTextureChanger
             if (test)
                 workMainTextureRef = TestTexture.MainTextureRef;
             workMainTextureRef
-                .If(t => Flight)
+                //.If(t => Flight)
                 .Do(newTex => _flightMaterial.Value.SetTexture("_MainTexture", newTex))
                 .Do(t => Log.Info("Changed flight NavBall texture"));
 
@@ -308,18 +344,18 @@ namespace NavBallTextureChanger
 
         public void SetIvaTextures(bool test = false)
         {
-            if (!Iva) return;
+           // if (!Iva) return;
 
-            Texture workMainTextureRef = _mainTextureRef;
+            Texture workIVATextureRef = _ivaTextureRef;
             Texture workEmissivetextureRef = _emissiveTextureRef;
             Color workEmissiveColor = EmissiveColor;
             if (test)
             {
-                workMainTextureRef = TestTexture.MainTextureRef;
+                workIVATextureRef = TestTexture.IVATextureRef;
                 workEmissivetextureRef = TestTexture.EmissiveTextureRef;
                 workEmissiveColor = TestTexture.EmissiveColor;
             }
-            workMainTextureRef
+            workIVATextureRef
                 .Do(t =>
                     ForEachIvaMaterial(m =>
                     {
@@ -368,29 +404,34 @@ namespace NavBallTextureChanger
             SetTexture((Texture2D)_mainTextureRef, (Texture2D)_emissiveTextureRef, EmissiveColor);
         }
 #endif
-        public void SetTexture(FileEmissive fe, bool test = false)
+        public void SetTexture(FileEmissive fe, bool save = false)
         {
-            if (!test)
-                TestTexture = new TextureInfo(fe.image, fe.emissiveImg, fe.file, fe.emissive, fe.EmissiveColor);
-            else
-                TestTexture = new TextureInfo(fe.image, fe.emissiveImg, fe.file, fe.emissive, fe.EmissiveColor);
 
             if (HighLogic.LoadedScene == GameScenes.FLIGHT)
             {
                 if (!NavBallChanger.IVAactive)
-                    SetFlightTexture(test);
+                {
+                    TestTexture = new TextureInfo(fe.image, fe.file);
+
+                    SetFlightTexture(true);
+                    TextureUrl = "NavBallTextureChanger/" + TestTexture.TextureUrl;
+                    _mainTextureRef = fe.image;
+                }
                 else
-                    SetIvaTextures(test);
+                {
+                    TestTexture = new TextureInfo(fe.image, fe.emissiveImg, fe.file, fe.emissive, fe.EmissiveColor);
+                    SetIvaTextures(true);
+                    IVATextureUrl = "NavBallTextureChanger/" + TestTexture.IVATextureUrl;
+                    EmissiveUrl = "NavBallTextureChanger/" + TestTexture.EmissiveUrl;
+                    EmissiveColor = TestTexture.EmissiveColor;
+                    _ivaTextureRef = fe.image;
+                    _emissiveTextureRef = fe.emissiveImg;
+                    EmissiveColor = fe.EmissiveColor;
+                }
 
-                TextureUrl = "NavBallTextureChanger/" + TestTexture.TextureUrl;
-                EmissiveUrl = "NavBallTextureChanger/" +TestTexture.EmissiveUrl;
-                EmissiveColor = TestTexture.EmissiveColor;
 
-                _mainTextureRef = fe.image;
-                _emissiveTextureRef = fe.emissiveImg;
-                EmissiveColor = fe.EmissiveColor;
-
-                SaveConfig();
+                if (save)
+                    SaveConfig();
             }
         }
 
@@ -404,21 +445,35 @@ namespace NavBallTextureChanger
         {
             if (SavedTexture != null)
             {
-                _mainTextureRef = SavedTexture.MainTextureRef;
-                _emissiveTextureRef = SavedTexture.EmissiveTextureRef;
-                TextureUrl = SavedTexture.TextureUrl;
-                EmissiveUrl = SavedTexture.EmissiveUrl;
-                EmissiveColor = SavedTexture.EmissiveColor;
+                if (!NavBallChanger.IVAactive)
+                {
+                    _mainTextureRef = SavedTexture.MainTextureRef;
+                    TextureUrl = SavedTexture.TextureUrl;
+                }
+                else
+                {
+                    _ivaTextureRef = SavedIVATexture.IVATextureRef;
+                    _emissiveTextureRef = SavedIVATexture.EmissiveTextureRef;
+                    IVATextureUrl = SavedIVATexture.IVATextureUrl;
+                    EmissiveUrl = SavedIVATexture.EmissiveUrl;
+                    EmissiveColor = SavedIVATexture.EmissiveColor;
+                }
 
-                var stockUrl = _skinDirectory + "/" + Path.GetFileNameWithoutExtension("SavedTexture-" + StockTextureFileName);
-                SaveCopyOfTexture(stockUrl, SavedTexture.MainTextureRef);
-                // Maybe use SetTexture below???
+                //var stockUrl = _skinDirectory + "/" + Path.GetFileNameWithoutExtension("SavedTexture-" + StockTextureFileName);
+                //var stockIvaUrl = _skinDirectory + "/" + Path.GetFileNameWithoutExtension("SavedTexture-" + IvaTextureFileName);
+
                 if (HighLogic.LoadedScene == GameScenes.FLIGHT)
                 {
                     if (!NavBallChanger.IVAactive)
+                    {
+                        //SaveCopyOfTexture(stockUrl, SavedTexture.MainTextureRef);
                         SetFlightTexture();
+                    }
                     else
+                    {
+                        //SaveCopyOfTexture(stockIvaUrl, SavedIVATexture.MainTextureRef);
                         SetIvaTextures();
+                    }
                 }
             }
             else
@@ -427,37 +482,53 @@ namespace NavBallTextureChanger
 
         public void ResetToStockTexture()
         {
-            TextureUrl = _skinDirectory + "/" + StockTextureFileName;
-            EmissiveUrl = _skinDirectory + "/" + IvaTextureFileName;
-            EmissiveColor = DefaultEmissiveColor;
-            Flight = true;
-            Iva = true;
+            if (!NavBallChanger.IVAactive)
+            {
+                TextureUrl = _skinDirectory + "/" + StockTextureFileName;
+            }
+            else
+            {
+                IVATextureUrl = _skinDirectory + "/" + IvaTextureFileName;
+                EmissiveUrl = _skinDirectory + "/" + IvaEmissiveTextureFileName;
+                EmissiveColor = DefaultEmissiveColor;
+            }
+            //Flight = true;
+            //Iva = true;
             SaveConfig();
             LoadConfig();
         }
         public void SaveTexture()
         {
-            SavedTexture = new TextureInfo((Texture2D)_mainTextureRef, (Texture2D)_emissiveTextureRef, TextureUrl, EmissiveUrl, EmissiveColor);
-            if (_mainTextureRef == null)
-                Log.Info("_mainTextureRef is null");
-            if (SavedTexture.MainTextureRef == null)
-                Log.Info("SaveTexture, MainTexRef is null");
+            if (!NavBallChanger.IVAactive)
+            {
+                SavedTexture = new TextureInfo((Texture2D)_mainTextureRef, TextureUrl);
+                if (_mainTextureRef == null)
+                    Log.Info("_mainTextureRef is null");
+                if (SavedTexture.MainTextureRef == null)
+                    Log.Info("SaveTexture, MainTexRef is null");
+            }
+            else
+            {
+                SavedIVATexture = new TextureInfo((Texture2D)_mainTextureRef, (Texture2D)_emissiveTextureRef, IVATextureUrl, EmissiveUrl, EmissiveColor);
+            }
         }
 
         public void SetTexture(Texture2D texture, Texture2D emissive, Color EmissiveColor, bool test = false)
         {
             _mainTextureRef = texture;
-            if (emissive != null)
+            if (NavBallChanger.IVAactive)
             {
-                _emissiveTextureRef = emissive;
-                this.EmissiveColor = EmissiveColor;
+                if (emissive != null)
+                {
+                    _emissiveTextureRef = emissive;
+                    this.EmissiveColor = EmissiveColor;
+                }
+                else
+                {
+                    _emissiveTextureRef = DefaultEmissiveTexture;
+                    EmissiveColor = DefaultEmissiveColor;
+                }
             }
-            else
-            {
-                _emissiveTextureRef = DefaultEmissiveTexture;
-                EmissiveColor = DefaultEmissiveColor;
-            }
-
             if (HighLogic.LoadedScene == GameScenes.FLIGHT)
             {
                 if (!NavBallChanger.IVAactive)

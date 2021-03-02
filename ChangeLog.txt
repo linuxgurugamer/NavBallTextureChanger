@@ -13,3 +13,14 @@ ChangeLog
 2.0.0.1
 	Added advanced section
 	Added README
+
+2.0.0.1
+	Fixed old file name in config file (was showing texture a a big questionmark)
+	renamed one skin config file
+
+2.0.0.2
+	Removed flags for IVA and Flight
+	Enabled separate skins for IVA
+	Only use IVAs with emissives for IVA
+	Removed emissive config for three files
+	Added checks to ensure empty config files won't cause nullrefs

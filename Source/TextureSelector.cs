@@ -24,22 +24,22 @@ namespace NavBallTextureChanger
         public string descr;
 
         public Color EmissiveColor = new Color(0.376f, 0.376f, 0.376f, 1f);
-        public bool Flight = true;
-        public bool Iva = true;
+        //public bool Flight = true;
+        //public bool Iva = true;
 
         public Texture2D thumb;
         public Texture2D image;
         public Texture2D emissiveImg;
 
-        public FileEmissive(string file, string emissive, string descr, Color emissiveColor, bool Flight, bool Iva)
+        public FileEmissive(string file, string emissive, string descr, Color emissiveColor) //, bool Flight, bool Iva)
         {
             this.file = file;
             this.emissive = emissive;
             this.descr = descr;
 
             this.EmissiveColor = emissiveColor;
-            this.Flight = Flight;
-            this.Iva = Iva;
+            //this.Flight = Flight;
+            //this.Iva = Iva;
         }
     }
 
@@ -112,48 +112,51 @@ namespace NavBallTextureChanger
             {
                 Log.Info("file: " + f);
                 var fnode = ConfigNode.Load(f);
-                var n1 = fnode.GetNodes(TEX_NODES);
-                if (n1 != null)
+                if (fnode != null)
                 {
-                    foreach (var fileNode in n1)
+                    var n1 = fnode.GetNodes(TEX_NODES);
+                    if (n1 != null)
                     {
-                        var nodes = fileNode.GetNodes(FILE_EMISSIVE);
-                        if (nodes != null)
+                        foreach (var fileNode in n1)
                         {
-                            foreach (var n in nodes)
+                            var nodes = fileNode.GetNodes(FILE_EMISSIVE);
+                            if (nodes != null)
                             {
-                                string file = n.SafeLoad("file", "");
-                                string emissive = n.SafeLoad("emissive", "");
-                                if (file != "")
+                                foreach (var n in nodes)
                                 {
-                                    string descr = n.SafeLoad("descr", "");
-                                    if (descr == "")
-                                        descr = Path.GetFileNameWithoutExtension(file);
-                                    Color EmissiveColor = n.SafeLoad("EmissiveColor", new Color(0.376f, 0.376f, 0.376f, 1f));
-                                    bool Flight = n.SafeLoad("Flight", true);
-                                    bool Iva = n.SafeLoad("Iva", true);
-
-                                    string p = "GameData/NavBallTextureChanger/";
-                                    if (File.Exists(p + file))
+                                    string file = n.SafeLoad("file", "");
+                                    string emissive = n.SafeLoad("emissive", "");
+                                    if (file != "")
                                     {
-                                        FileEmissive fe = new FileEmissive(file, emissive, descr, EmissiveColor, Flight, Iva);
+                                        string descr = n.SafeLoad("descr", "");
+                                        if (descr == "")
+                                            descr = Path.GetFileNameWithoutExtension(file);
+                                        Color EmissiveColor = n.SafeLoad("EmissiveColor", new Color(0.376f, 0.376f, 0.376f, 1f));
+                                        //bool Flight = n.SafeLoad("Flight", true);
+                                        //bool Iva = n.SafeLoad("Iva", true);
 
-                                        name = Path.GetFileNameWithoutExtension(file);
-                                        Texture2D image;
-                                        var thumb = ResizeImage(p + file, out image);
-                                        if (thumb != null)
+                                        string p = "GameData/NavBallTextureChanger/";
+                                        if (File.Exists(p + file))
                                         {
-                                            fe.thumb = thumb;
-                                            fe.image = image;
-                                        }
+                                            FileEmissive fe = new FileEmissive(file, emissive, descr, EmissiveColor); //, Flight, Iva);
 
-                                        if (emissive != null)
-                                        {
-                                            Texture2D emImg = new Texture2D(2, 2);
-                                            ToolbarControl.LoadImageFromFile(ref emImg, p + emissive);
-                                            fe.emissiveImg = emImg;
+                                            name = Path.GetFileNameWithoutExtension(file);
+                                            Texture2D image;
+                                            var thumb = ResizeImage(p + file, out image);
+                                            if (thumb != null)
+                                            {
+                                                fe.thumb = thumb;
+                                                fe.image = image;
+                                            }
+
+                                            if (emissive != null)
+                                            {
+                                                Texture2D emImg = new Texture2D(2, 2);
+                                                ToolbarControl.LoadImageFromFile(ref emImg, p + emissive);
+                                                fe.emissiveImg = emImg;
+                                            }
+                                            fileEmissiveDict.Add(file, fe);
                                         }
-                                        fileEmissiveDict.Add(file, fe);
                                     }
                                 }
                             }
@@ -209,6 +212,7 @@ namespace NavBallTextureChanger
 
                     GUILayout.BeginVertical();
                     GUILayout.FlexibleSpace();
+#if false
                     if (t.Value.Flight)
                     {
                         GUILayout.BeginHorizontal();
@@ -221,10 +225,11 @@ namespace NavBallTextureChanger
                         GUILayout.Label("Iva");
                         GUILayout.EndHorizontal();
                     }
-                    if (t.Value.emissive != "")
+#endif
+                    if (t.Value.emissive != "" && !onlyShowWithEmissives)
                     {
                         GUILayout.BeginHorizontal();
-                        GUILayout.Label("Emissive avail");
+                        GUILayout.Label("Emissive\navailable");
                         GUILayout.EndHorizontal();
                     }
                     GUILayout.FlexibleSpace();
@@ -253,13 +258,16 @@ namespace NavBallTextureChanger
             GUILayout.Space(10);
 
             GUILayout.BeginHorizontal();
-            onlyShowWithEmissives = GUILayout.Toggle(onlyShowWithEmissives, "Only w/ emissives", GUILayout.Width(90));
+            if (NavBallChanger.IVAactive)
+                onlyShowWithEmissives = true;
+            else
+                onlyShowWithEmissives = GUILayout.Toggle(onlyShowWithEmissives, "Only w/ emissives", GUILayout.Width(90));
 
             GUILayout.FlexibleSpace();
             GUI.enabled = selected;
             if (GUILayout.Button("Test", GUILayout.Width(90)))
             {
-                NavBallChanger._navballTexture.SetTexture(fe, true); // fe.image, fe.emissiveImg, fe.EmissiveColor);
+                NavBallChanger._navballTexture.SetTexture(fe); // fe.image, fe.emissiveImg, fe.EmissiveColor);
                 tested = true;
             }
             GUILayout.FlexibleSpace();
