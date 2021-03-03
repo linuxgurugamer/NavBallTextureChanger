@@ -378,12 +378,12 @@ namespace NavBallTextureChanger
             }
         }
 
-        public void SetTexture(FileEmissive fe, bool save = false)
+        public void SetTexture(FileEmissive fe, bool save = false, bool both = false)
         {
 
             if (HighLogic.LoadedScene == GameScenes.FLIGHT)
             {
-                if (!NavBallChanger.IVAactive)
+                if (!NavBallChanger.IVAactive ||  both)
                 {
                     TestTexture = new TextureInfo(fe.image, fe.file);
 
@@ -391,7 +391,7 @@ namespace NavBallTextureChanger
                     TextureUrl = Constants.MOD_DIR + TestTexture.TextureUrl;
                     _mainTextureRef = fe.image;
                 }
-                else
+                if (NavBallChanger.IVAactive || both)
                 {
                     TestTexture = new TextureInfo(fe.image, fe.emissiveImg, fe.file, fe.emissive, fe.EmissiveColor);
                     SetIvaTextures(true);

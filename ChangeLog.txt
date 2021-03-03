@@ -32,3 +32,9 @@ ChangeLog
 	Fixed emissive for IVA, now supplied with mod because not all command pods have a configured emissive
 	fixed paths for all locations
 	Moved constants into new class called Constants
+
+2.0.0.4
+	Enabled skins without emissives for IVA use
+	Added option to save for both, this will make both IVA and Flight to have the same textures
+	Fixed Advanced mode to only be active if an emissive is available
+	Fixed height not resetting when disabling advanced mode

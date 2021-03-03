@@ -59,7 +59,7 @@ namespace NavBallTextureChanger
         const int THUMB_HEIGHT = 75;
 
         const float WIDTH = 1054;
-        const float HEIGHT = 256 + 100;
+        const float HEIGHT = 372;
 
         private Rect windowPosition = new Rect(Screen.width / 2 - WIDTH / 2, Screen.height / 2 - HEIGHT / 2, WIDTH, HEIGHT);
 
@@ -104,7 +104,7 @@ namespace NavBallTextureChanger
 
         public void LoadTextureConfigs()
         {
-            var files = Directory.GetFiles( Constants.SKIN_DATADIR, "*.cfg");
+            var files = Directory.GetFiles(Constants.SKIN_DATADIR, "*.cfg");
             foreach (var f in files)
             {
                 var fnode = ConfigNode.Load(f);
@@ -202,7 +202,6 @@ namespace NavBallTextureChanger
                         saved = false;
                         selected = true;
                         tested = false;
-                        //emc = new Color(fe.EmissiveColor.r, fe.EmissiveColor.g, fe.EmissiveColor.b, fe.EmissiveColor.a);
                         emc = fe.EmissiveColor;
                     }
 
@@ -240,25 +239,32 @@ namespace NavBallTextureChanger
             GUILayout.Space(10);
 
             GUILayout.BeginHorizontal();
-            if (NavBallChanger.IVAactive)
-                onlyShowWithEmissives = true;
-            else
-                onlyShowWithEmissives = GUILayout.Toggle(onlyShowWithEmissives, "Only w/ emissives", GUILayout.Width(90));
+            //if (NavBallChanger.IVAactive)
+            //    onlyShowWithEmissives = true;
+            //else
+            onlyShowWithEmissives = GUILayout.Toggle(onlyShowWithEmissives, "Only w/ emissives", GUILayout.Width(90));
 
             GUILayout.FlexibleSpace();
             GUI.enabled = selected;
             if (GUILayout.Button("Test", GUILayout.Width(90)))
             {
-                NavBallChanger._navballTexture.SetTexture(fe); // fe.image, fe.emissiveImg, fe.EmissiveColor);
+                NavBallChanger._navballTexture.SetTexture(fe);
                 tested = true;
             }
             GUILayout.FlexibleSpace();
             GUI.enabled = tested;
+
             if (GUILayout.Button("Save", GUILayout.Width(90)))
             {
                 NavBallChanger._navballTexture.SetTexture(fe, true);
                 saved = true;
             }
+            if (GUILayout.Button("Save both", GUILayout.Width(90)))
+            {
+                NavBallChanger._navballTexture.SetTexture(fe, true, true);
+                saved = true;
+            }
+            GUILayout.FlexibleSpace();
             GUI.enabled = true;
             GUILayout.FlexibleSpace();
 
@@ -281,8 +287,13 @@ namespace NavBallTextureChanger
             GUILayout.FlexibleSpace();
             GUILayout.EndHorizontal();
             GUILayout.BeginHorizontal();
-                GUI.enabled = (tested || saved);
+            GUI.enabled = (tested || saved) && (fe != null && fe.emissive != "");
+            if (fe == null || fe.emissive == "")
+                advanced = false;
             advanced = GUILayout.Toggle(advanced, "Advanced (only visible in IVA)", GUILayout.Width(90));
+            if (!advanced)
+                windowPosition.height = HEIGHT;
+
             GUILayout.EndHorizontal();
             if (advanced && NavBallChanger.IVAactive)
             {

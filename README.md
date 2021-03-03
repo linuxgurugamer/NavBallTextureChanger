@@ -5,7 +5,7 @@ This mod was originally written by forum user @xEvilReeperx.  It was taken over 
 Due to a total lack of updates since 8/6/2017, I've adopted it.
 
 Thanks to forum user @therealcrow999 for his assistance with the emissives
-Thanks to @Stone_Blue for his work in collecting all the available textures in one place
+Thanks to @Stone Blue for his work in collecting all the available textures in one place
 
 Major changes in this version
 	External/visible
