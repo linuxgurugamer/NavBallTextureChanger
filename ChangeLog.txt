@@ -11,7 +11,7 @@ ChangeLog
 		SpaceTuxLibrary
 		
 2.0.0.1
-	Added advanced section
+	Added advanced section for customization of Emissive values
 	Added README
 
 2.0.0.1
@@ -24,3 +24,11 @@ ChangeLog
 	Only use IVAs with emissives for IVA
 	Removed emissive config for three files
 	Added checks to ensure empty config files won't cause nullrefs
+
+2.0.0.3
+	Removed more dead code
+	Remove duplicated config
+	Added code to ensure that if a duplicate config is encountered, it won't stop the loading of all the other configs
+	Fixed emissive for IVA, now supplied with mod because not all command pods have a configured emissive
+	fixed paths for all locations
+	Moved constants into new class called Constants

@@ -20,8 +20,7 @@ namespace NavBallTextureChanger
 
 		private void Awake()
 		{
-			Log.Info("NavBallChanger.Awake");
-			_navballTexture = new NavBallTexture(GetSkinDirectory());
+			_navballTexture = new NavBallTexture();
 
 			// Save the original textures first
 			_navballTexture.SaveCopyOfStockTexture(true);
@@ -60,7 +59,6 @@ namespace NavBallTextureChanger
 		// in the meantime
 		private void OnCameraChanged(CameraManager.CameraMode mode)
 		{
-			Log.Info("OnCameraChanged");
 			IVAactive = (mode == CameraManager.CameraMode.IVA);
 			if (!IVAactive)
 			{			
@@ -80,16 +78,11 @@ namespace NavBallTextureChanger
 
 		private void UpdateIvaTextures()
 		{
-			Log.Info("UpdateIvaTextures");
+
 			_navballTexture.SaveCopyOfIvaTexture();
 			_navballTexture.Do(nbt => nbt.SetIvaTextures());
 		}
 
 
-		internal static string GetSkinDirectory()
-		{
-			var skinUrl =  "NavBallTextureChanger/PluginData/Skins";
-			return skinUrl;
-		}
 	}
 }

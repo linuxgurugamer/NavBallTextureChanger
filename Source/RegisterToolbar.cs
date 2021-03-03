@@ -13,7 +13,7 @@ namespace NavBallTextureChanger
 
         void Start()
         {
-            ToolbarControl.RegisterMod(TextureSelector.MODID, TextureSelector.MODNAME);
+            ToolbarControl.RegisterMod(Constants.MODID, Constants.MODNAME);
 #if DEBUG
             Log = new Log("NavBallTextureChanger", Log.LEVEL.INFO);
 #else

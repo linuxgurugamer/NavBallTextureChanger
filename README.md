@@ -4,9 +4,13 @@ This mod was originally written by forum user @xEvilReeperx.  It was taken over 
 
 Due to a total lack of updates since 8/6/2017, I've adopted it.
 
+Thanks to forum user @therealcrow999 for his assistance with the emissives
+Thanks to @Stone_Blue for his work in collecting all the available textures in one place
+
 Major changes in this version
 	External/visible
 		Added UI to select navball texture in-game without any file editing
+		Now allows separate skin for IVA
 	Internal
 		Removed usage of persistence to save config
 		Added methods to save and load config
@@ -17,7 +21,7 @@ Major changes in this version
 Dependencies
         ClickThroughBlocker
         ToolbarController
-        SpaceTuxLibrary (latest version, released a day or so ago)
+        SpaceTuxLibrary 
 
 Note
 	Emissives are only used in IVA mode

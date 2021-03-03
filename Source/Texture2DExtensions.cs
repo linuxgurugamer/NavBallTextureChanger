@@ -24,9 +24,7 @@ namespace NavBallTextureChanger.Extensions
 
 
 			if (pathInGameData.StartsWith("/"))
-				pathInGameData = pathInGameData.Substring(1);
-
-			pathInGameData = "GameData/" + pathInGameData;
+				pathInGameData = pathInGameData.Substring(1);			
 
 			if (!pathInGameData.EndsWith(".png"))
 				pathInGameData += ".png";

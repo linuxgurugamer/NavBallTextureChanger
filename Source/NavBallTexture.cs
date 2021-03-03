@@ -26,7 +26,6 @@ namespace NavBallTextureChanger
 
         private static bool _savedStockTexture = false;
         private static bool _savedIvaTexture = false;
-        private static bool _savedEmissiveTexture = false;
 
 
 
@@ -35,7 +34,7 @@ namespace NavBallTextureChanger
         // IVA materials are not cached because mods might spawn new IVAs or change/destroy existing ones
         // we'll grab those materials only when we're about to use them
 
-        private readonly string _skinDirectory;
+       // private readonly string _skinDirectory;
 
         private Texture2D _mainTextureRef;
         private Texture2D _ivaTextureRef;
@@ -88,7 +87,7 @@ namespace NavBallTextureChanger
 
         const string PLUGINDATA = "GameData/NavBallTextureChanger/PluginData/";
         const string NODE = "NavballTexture";
-
+        const string SKINDIR =  "NavBallTextureChanger/PluginData/Skins";
 
 
         public void SaveConfig()
@@ -122,23 +121,21 @@ namespace NavBallTextureChanger
                 if (TextureUrl != "")
                 {
                     _mainTextureRef = new Texture2D(2, 2);
-                    ToolbarControl.LoadImageFromFile(ref _mainTextureRef, "GameData/" + TextureUrl);
+                    ToolbarControl.LoadImageFromFile(ref _mainTextureRef, TextureUrl);
                 }
                 IVATextureUrl = node.SafeLoad("IVATextureUrl", string.Empty);
                 if (IVATextureUrl != "")
                 {
                     _ivaTextureRef = new Texture2D(2, 2);
-                    ToolbarControl.LoadImageFromFile(ref _ivaTextureRef, "GameData/" + IVATextureUrl);
+                    ToolbarControl.LoadImageFromFile(ref _ivaTextureRef, IVATextureUrl);
                 }
                 EmissiveUrl = node.SafeLoad("EmissiveUrl", string.Empty);
                 if (EmissiveUrl != "")
                 {
                     _emissiveTextureRef = new Texture2D(2, 2);
-                    ToolbarControl.LoadImageFromFile(ref _emissiveTextureRef, "GameData/" + EmissiveUrl);
+                    ToolbarControl.LoadImageFromFile(ref _emissiveTextureRef, EmissiveUrl);
                 }
                 EmissiveColor = node.SafeLoad("EmissiveColor", new Color(0.376f, 0.376f, 0.376f, 1f));
-                //Flight = node.SafeLoad("Flight", true);
-                //Iva = node.SafeLoad("Iva", true);
 
                 if (!NavBallChanger.IVAactive)
                 {
@@ -155,14 +152,12 @@ namespace NavBallTextureChanger
         }
 
 
-        public NavBallTexture(string skinDirectory)
+        public NavBallTexture()
         {
-            if (skinDirectory == null) throw new ArgumentNullException("skinDirectory");
 
             _stockTexture = new NavBallTextureChanger.Extensions.Lazy<Texture2D>(GetStockTexture);
             _flightMaterial = new NavBallTextureChanger.Extensions.Lazy<Material>(GetFlightNavBallMaterial);
 
-            _skinDirectory = skinDirectory;
             Instance = this;
 
         }
@@ -214,8 +209,6 @@ namespace NavBallTextureChanger
 
             try
             {
-                KSPUtil.GetOrCreatePath("GameData/" + _skinDirectory);
-
                 target
                     .With(tar => ((Texture2D)tar).CreateReadable())
                     .Do(readable =>
@@ -225,7 +218,7 @@ namespace NavBallTextureChanger
             }
             catch (UnauthorizedAccessException e)
             {
-                Log.Error("Could not create copy of stock NavBall texture inside directory '" + _skinDirectory +
+                Log.Error("Could not create copy of stock NavBall texture inside directory '" + Constants.SKIN_DATADIR +
                           "' due to insufficient permissions.");
                 Debug.LogException(e);
             }
@@ -238,13 +231,14 @@ namespace NavBallTextureChanger
             return successful;
         }
 
-        string StockUrl { get { return _skinDirectory + "/" + Path.GetFileNameWithoutExtension(StockTextureFileName); } }
-        string IvaUrl { get { return _skinDirectory + "/" + Path.GetFileNameWithoutExtension(IvaTextureFileName); } }
-        string IvaEmissiveUrl { get { return _skinDirectory + "/" + Path.GetFileNameWithoutExtension(IvaEmissiveTextureFileName); } }
+        string StockUrl { get { return Constants.SKIN_DATADIR + "/" + Path.GetFileNameWithoutExtension(StockTextureFileName); } }
+        string IvaUrl { get { return Constants.SKIN_DATADIR + "/" + Path.GetFileNameWithoutExtension(IvaTextureFileName); } }
+        string IvaEmissiveUrl { get { return Constants.SKIN_DATADIR + "/" + Path.GetFileNameWithoutExtension(IvaEmissiveTextureFileName); } }
 
         // Always save a copy of the stock texture, in case it ever gets changed
         // This is called when the mod inititalizes the first time.  IVA has to wait
         // until IVA mode is entered the first time
+        // Note that iva Emissive is supplied with the mod, since apparently some crew pods don't have the emissive configured
         public void SaveCopyOfStockTexture(bool saveCopyAsOrig = false)
         {
             var img =
@@ -263,7 +257,6 @@ namespace NavBallTextureChanger
         // Always save a copy of the stock iva
         public void SaveCopyOfIvaTexture()
         {
-            Log.Info("SaveCopyOfIvaTexture, ivaSaved: " + ivaSaved);
             if (ivaSaved)
                 return;
             ivaSaved = true;
@@ -273,19 +266,16 @@ namespace NavBallTextureChanger
                 .Do(flightTexture => _savedIvaTexture = SaveCopyOfTexture(IvaUrl, flightTexture))
                 .If(t => _savedIvaTexture)
                 .Do(t => Log.Info("Saved a copy of stock NavBall texture to " + IvaUrl));
-
-            var l = GetIvaNavBallMaterials();
-            Log.Info("IVA List of materials: " + l.Count);
-            foreach (var m in l[0].GetTexturePropertyNames())
-            {
-                Log.Info("Texture m: " + m);
-            }
+            
+            // Emissive is supplied with the mod since not all command pods have it configured
+#if false
             GetIvaNavBallMaterials()
                 .FirstOrDefault(m => m.GetTexture("_Emissive") != null)
                 .With(m => m.GetTexture("_Emissive"))
                 .Do(emissionTex => _savedEmissiveTexture = SaveCopyOfTexture(IvaEmissiveUrl, emissionTex))
                 .If(t => _savedEmissiveTexture)
                 .Do(t => Log.Info("Saved a copy of stock IVA emissive texture to " + IvaEmissiveUrl));
+#endif
         }
 
 
@@ -344,8 +334,6 @@ namespace NavBallTextureChanger
 
         public void SetIvaTextures(bool test = false)
         {
-           // if (!Iva) return;
-
             Texture workIVATextureRef = _ivaTextureRef;
             Texture workEmissivetextureRef = _emissiveTextureRef;
             Color workEmissiveColor = EmissiveColor;
@@ -355,13 +343,14 @@ namespace NavBallTextureChanger
                 workEmissivetextureRef = TestTexture.EmissiveTextureRef;
                 workEmissiveColor = TestTexture.EmissiveColor;
             }
+
             workIVATextureRef
                 .Do(t =>
                     ForEachIvaMaterial(m =>
                     {
                         m.SetTexture("_MainTex", t);
 
-                        // for some ungodly reason, the IVA texture is flipped horizontally ;\
+                        // for some ungodly reason, the IVA texture is flipped horizontally 
                         m.SetTextureScale("_MainTex", new Vector2(-1f, 1f));
                         m.SetTextureOffset("_MainTex", new Vector2(1f, 0f));
                     }))
@@ -369,6 +358,7 @@ namespace NavBallTextureChanger
 
             if (workEmissivetextureRef != null)
             {
+                Log.Info("Setting workEmissivetextureRef Emissive");
                 workEmissivetextureRef
                     .Do(t =>
                         ForEachIvaMaterial(m =>
@@ -380,30 +370,14 @@ namespace NavBallTextureChanger
                         .With(t => GetIvaNavBallMaterials());
 
 
-                ForEachIvaMaterial(m =>
-                {
-                    m.SetColor("_EmissiveColor", workEmissiveColor);
-                });
+                        ForEachIvaMaterial(m =>
+                        {
+                            m.SetColor("_EmissiveColor", workEmissiveColor);
+                        }
+                    );
             }
         }
 
-#if false
-
-        public void PersistenceLoad()
-        {
-            _mainTextureRef = GetTextureUsingUrl(TextureUrl).Or(_stockTexture.Value);
-            _emissiveTextureRef = GetTextureUsingUrl(EmissiveUrl).Or((Texture2D)null);
-        }
-
-        public void SetTexture(string textureUrl, string emissiveUrl)
-        {
-            TextureUrl = textureUrl;
-            EmissiveUrl = emissiveUrl;
-            _mainTextureRef = GetTextureUsingUrl(TextureUrl).Or(_stockTexture.Value);
-            _emissiveTextureRef = GetTextureUsingUrl(EmissiveUrl).Or((Texture)null);
-            SetTexture((Texture2D)_mainTextureRef, (Texture2D)_emissiveTextureRef, EmissiveColor);
-        }
-#endif
         public void SetTexture(FileEmissive fe, bool save = false)
         {
 
@@ -414,19 +388,19 @@ namespace NavBallTextureChanger
                     TestTexture = new TextureInfo(fe.image, fe.file);
 
                     SetFlightTexture(true);
-                    TextureUrl = "NavBallTextureChanger/" + TestTexture.TextureUrl;
+                    TextureUrl = Constants.MOD_DIR + TestTexture.TextureUrl;
                     _mainTextureRef = fe.image;
                 }
                 else
                 {
                     TestTexture = new TextureInfo(fe.image, fe.emissiveImg, fe.file, fe.emissive, fe.EmissiveColor);
                     SetIvaTextures(true);
-                    IVATextureUrl = "NavBallTextureChanger/" + TestTexture.IVATextureUrl;
-                    EmissiveUrl = "NavBallTextureChanger/" + TestTexture.EmissiveUrl;
+                    IVATextureUrl = Constants.MOD_DIR + TestTexture.IVATextureUrl;
+                    EmissiveUrl = Constants.MOD_DIR + TestTexture.EmissiveUrl;
+
                     EmissiveColor = TestTexture.EmissiveColor;
-                    _ivaTextureRef = fe.image;
-                    _emissiveTextureRef = fe.emissiveImg;
-                    EmissiveColor = fe.EmissiveColor;
+                    _ivaTextureRef = TestTexture.IVATextureRef; //  fe.image;
+                    _emissiveTextureRef = TestTexture.EmissiveTextureRef; // fe.emissiveImg;
                 }
 
 
@@ -459,19 +433,15 @@ namespace NavBallTextureChanger
                     EmissiveColor = SavedIVATexture.EmissiveColor;
                 }
 
-                //var stockUrl = _skinDirectory + "/" + Path.GetFileNameWithoutExtension("SavedTexture-" + StockTextureFileName);
-                //var stockIvaUrl = _skinDirectory + "/" + Path.GetFileNameWithoutExtension("SavedTexture-" + IvaTextureFileName);
 
                 if (HighLogic.LoadedScene == GameScenes.FLIGHT)
                 {
                     if (!NavBallChanger.IVAactive)
                     {
-                        //SaveCopyOfTexture(stockUrl, SavedTexture.MainTextureRef);
                         SetFlightTexture();
                     }
                     else
                     {
-                        //SaveCopyOfTexture(stockIvaUrl, SavedIVATexture.MainTextureRef);
                         SetIvaTextures();
                     }
                 }
@@ -484,12 +454,12 @@ namespace NavBallTextureChanger
         {
             if (!NavBallChanger.IVAactive)
             {
-                TextureUrl = _skinDirectory + "/" + StockTextureFileName;
+                TextureUrl = Constants.SKIN_DATADIR + "/" + StockTextureFileName;
             }
             else
             {
-                IVATextureUrl = _skinDirectory + "/" + IvaTextureFileName;
-                EmissiveUrl = _skinDirectory + "/" + IvaEmissiveTextureFileName;
+                IVATextureUrl = Constants.SKIN_DATADIR + "/" + IvaTextureFileName;
+                EmissiveUrl = Constants.SKIN_DATADIR + "/" + IvaEmissiveTextureFileName;
                 EmissiveColor = DefaultEmissiveColor;
             }
             //Flight = true;

@@ -1,9 +1,6 @@
 ﻿using System;
 using System.IO;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Text.RegularExpressions;
 
 using UnityEngine;
@@ -16,16 +13,24 @@ using SpaceTuxUtility;
 
 namespace NavBallTextureChanger
 {
+    public class Constants
+    {
+        internal const string TEX_NODES = "NavballTextureChanger";
+        internal const string FILE_EMISSIVE = "FILE_EMISSIVE";
+        internal const string MOD_DIR = "GameData/NavBallTextureChanger/";
+        internal const string SKIN_DATADIR = MOD_DIR + "PluginData/Skins";
+
+        internal const string MODID = "NavBallTextureChanger";
+        internal const string MODNAME = "NavBall Texture Changer";
+
+    }
     public class FileEmissive
     {
         public string file;
         public string emissive;
-
         public string descr;
 
         public Color EmissiveColor = new Color(0.376f, 0.376f, 0.376f, 1f);
-        //public bool Flight = true;
-        //public bool Iva = true;
 
         public Texture2D thumb;
         public Texture2D image;
@@ -38,8 +43,6 @@ namespace NavBallTextureChanger
             this.descr = descr;
 
             this.EmissiveColor = emissiveColor;
-            //this.Flight = Flight;
-            //this.Iva = Iva;
         }
     }
 
@@ -50,13 +53,7 @@ namespace NavBallTextureChanger
         bool visible = false;
         int baseWindowID;
 
-        const string TEX_NODES = "NavballTextureChanger";
-        const string FILE_EMISSIVE = "FILE_EMISSIVE";
-        const string SKIN_DATADIR = "GameData/NavBallTextureChanger/PluginData/Skins";
         static public SortedDictionary<string, FileEmissive> fileEmissiveDict = new SortedDictionary<string, FileEmissive>();
-
-        internal const string MODID = "NavBallTextureChanger";
-        internal const string MODNAME = "NavBall Texture Changer";
 
         const int THUMB_WIDTH = 150;
         const int THUMB_HEIGHT = 75;
@@ -95,11 +92,11 @@ namespace NavBallTextureChanger
                 toolbarControl = gameObject.AddComponent<ToolbarControl>();
                 toolbarControl.AddToAllToolbars(windowToggle, windowToggle,
                     ApplicationLauncher.AppScenes.FLIGHT | ApplicationLauncher.AppScenes.TRACKSTATION,
-                    MODID,
+                    Constants.MODID,
                     "NavBallTextureChangerPBtn",
                     "NavBallTextureChanger/PluginData/navball-38",
                     "NavBallTextureChanger/PluginData/navball-24",
-                    MODNAME
+                    Constants.MODNAME
                 );
             }
 
@@ -107,19 +104,18 @@ namespace NavBallTextureChanger
 
         public void LoadTextureConfigs()
         {
-            var files = Directory.GetFiles("GameData/" + NavBallChanger.GetSkinDirectory(), "*.cfg");
+            var files = Directory.GetFiles( Constants.SKIN_DATADIR, "*.cfg");
             foreach (var f in files)
             {
-                Log.Info("file: " + f);
                 var fnode = ConfigNode.Load(f);
                 if (fnode != null)
                 {
-                    var n1 = fnode.GetNodes(TEX_NODES);
+                    var n1 = fnode.GetNodes(Constants.TEX_NODES);
                     if (n1 != null)
                     {
                         foreach (var fileNode in n1)
                         {
-                            var nodes = fileNode.GetNodes(FILE_EMISSIVE);
+                            var nodes = fileNode.GetNodes(Constants.FILE_EMISSIVE);
                             if (nodes != null)
                             {
                                 foreach (var n in nodes)
@@ -132,30 +128,29 @@ namespace NavBallTextureChanger
                                         if (descr == "")
                                             descr = Path.GetFileNameWithoutExtension(file);
                                         Color EmissiveColor = n.SafeLoad("EmissiveColor", new Color(0.376f, 0.376f, 0.376f, 1f));
-                                        //bool Flight = n.SafeLoad("Flight", true);
-                                        //bool Iva = n.SafeLoad("Iva", true);
-
-                                        string p = "GameData/NavBallTextureChanger/";
-                                        if (File.Exists(p + file))
+                                        if (File.Exists(Constants.MOD_DIR + file))
                                         {
                                             FileEmissive fe = new FileEmissive(file, emissive, descr, EmissiveColor); //, Flight, Iva);
 
                                             name = Path.GetFileNameWithoutExtension(file);
                                             Texture2D image;
-                                            var thumb = ResizeImage(p + file, out image);
+                                            var thumb = ResizeImage(Constants.MOD_DIR + file, out image);
                                             if (thumb != null)
                                             {
                                                 fe.thumb = thumb;
                                                 fe.image = image;
                                             }
 
-                                            if (emissive != null)
+                                            if (emissive != null && emissive != "")
                                             {
                                                 Texture2D emImg = new Texture2D(2, 2);
-                                                ToolbarControl.LoadImageFromFile(ref emImg, p + emissive);
+                                                ToolbarControl.LoadImageFromFile(ref emImg, Constants.MOD_DIR + emissive);
                                                 fe.emissiveImg = emImg;
                                             }
-                                            fileEmissiveDict.Add(file, fe);
+                                            if (!fileEmissiveDict.ContainsKey(file))
+                                                fileEmissiveDict.Add(file, fe);
+                                            else
+                                                Log.Error("Duplicate key found: " + file);
                                         }
                                     }
                                 }
@@ -180,7 +175,7 @@ namespace NavBallTextureChanger
         {
             GUI.skin = HighLogic.Skin;
             if (visible)
-                windowPosition = ClickThruBlocker.GUILayoutWindow(baseWindowID, windowPosition, DrawWindow, "NavBallTextureChanger");
+                windowPosition = ClickThruBlocker.GUILayoutWindow(baseWindowID, windowPosition, DrawWindow, "NavBall Texture Changer");
         }
 
         bool lastRectInitted = false;
@@ -207,25 +202,12 @@ namespace NavBallTextureChanger
                         saved = false;
                         selected = true;
                         tested = false;
-                        emc = new Color(fe.EmissiveColor.r, fe.EmissiveColor.g, fe.EmissiveColor.b, fe.EmissiveColor.a);
+                        //emc = new Color(fe.EmissiveColor.r, fe.EmissiveColor.g, fe.EmissiveColor.b, fe.EmissiveColor.a);
+                        emc = fe.EmissiveColor;
                     }
 
                     GUILayout.BeginVertical();
                     GUILayout.FlexibleSpace();
-#if false
-                    if (t.Value.Flight)
-                    {
-                        GUILayout.BeginHorizontal();
-                        GUILayout.Label("Flight");
-                        GUILayout.EndHorizontal();
-                    }
-                    if (t.Value.Iva)
-                    {
-                        GUILayout.BeginHorizontal();
-                        GUILayout.Label("Iva");
-                        GUILayout.EndHorizontal();
-                    }
-#endif
                     if (t.Value.emissive != "" && !onlyShowWithEmissives)
                     {
                         GUILayout.BeginHorizontal();
@@ -306,7 +288,7 @@ namespace NavBallTextureChanger
             {
                 var tmp = emc;
                 GUILayout.BeginHorizontal();
-                GUILayout.Label("Changes won't take effect until applied\nChanges won't be saved until ");
+                GUILayout.Label("Changes won't take effect until applied\nChanges won't be saved until saved ");
                 GUILayout.EndHorizontal();
                 GUILayout.BeginHorizontal();
                 GUILayout.Label("Red:", GUILayout.Width(60));
