@@ -38,3 +38,6 @@ ChangeLog
 	Added option to save for both, this will make both IVA and Flight to have the same textures
 	Fixed Advanced mode to only be active if an emissive is available
 	Fixed height not resetting when disabling advanced mode
+
+2.0.0.5
+	Emissive updates from forum user @therealcrow999
