@@ -44,3 +44,6 @@ ChangeLog
 
 2.0.0.6 
 	Added skin from forum user @OrdinaryKerman
+
+2.0.0.7
+	Updated emissive for skin from @OrdinaryKerman
