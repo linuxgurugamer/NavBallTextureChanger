@@ -41,3 +41,6 @@ ChangeLog
 
 2.0.0.5
 	Emissive updates from forum user @therealcrow999
+
+2.0.0.6 
+	Added skin from forum user @OrdinaryKerman
